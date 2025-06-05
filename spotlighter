@@ -7,9 +7,6 @@
 # Inspired by https://github.com/Strajk/setup and
 # https://mattprice.me/2020/programmatically-modify-spotlight-ignore/.
 
-# TODO: add usage examples
-# TODO: add shfmt support to the gh workflow
-
 set -eu
 
 DIR="$PWD"
@@ -17,6 +14,28 @@ PLIST="/System/Volumes/Data/.Spotlight-V100/VolumeConfiguration.plist"
 PLIST_BUDDY_BIN="/usr/libexec/PlistBuddy"
 FORCE=false
 VERBOSE=false
+
+usage() {
+  cat <<USAGE
+Usage: $(basename "$0") [options] [command]
+Commands:
+  add     Find development directories and add them to Spotlight exclusions (default)
+  show    Show current Spotlight exclusions
+  find    Print candidate development directories
+  check   Show Spotlight indexing status for the directory
+  completions [SHELL]  Generate shell completion script (bash or zsh)
+Options:
+  -d DIR, --dir DIR     Directory to search (default: current directory)
+  -f, --force           Rebuild exclusions from scratch
+  -v, --verbose         Print additional information
+  -h, --help            Show this help message
+Examples:
+  spotlighter add
+  spotlighter add -d ~/Projects/myapp
+  spotlighter -f add
+  spotlighter check
+USAGE
+}
 
 get_exclusions() {
   sudo "$PLIST_BUDDY_BIN" -c 'Print :Exclusions' "$PLIST" |
@@ -26,57 +45,12 @@ get_exclusions() {
 find_candidates() {
   if command -v rg >/dev/null 2>&1; then
     rg --files "$DIR" 2>/dev/null |
-      grep -E '/(node_modules|venv|\.venv|\.direnv)/' |
-      sed -E 's#(.*/(node_modules|venv|\.venv|\.direnv)).*#\1#' |
+      grep -E '/(node_modules|venv|\\.venv|\\.direnv)/' |
+      sed -E 's#(.*/(node_modules|venv|\\.venv|\\.direnv)).*#\\1#' |
       sort -u
   else
     find "$DIR" \
       \( -type d -name node_modules -o -type d -name venv -o -type d -name .venv -o -type d -name .direnv \) -prune
-  fi
-}
-
-generate_completions() {
-  shell="${1:-bash}"
-  case "$shell" in
-  bash)
-    cat <<'EOF'
-# bash completion for spotlighter
-_spotlighter() {
-  local cur cmds opts
-  COMPREPLY=()
-  cur="${COMP_WORDS[COMP_CWORD]}"
-  cmds="add show find check completions"
-  opts="-d --dir -f --force -v --verbose -h --help"
-  COMPREPLY=( $(compgen -W "$cmds $opts" -- "$cur") )
-  return 0
-}
-complete -F _spotlighter spotlighter
-EOF
-    ;;
-  zsh)
-    cat <<'EOF'
-#compdef spotlighter
-
-_arguments \
-  '-d[Directory to search]:directory:_files -/' \
-  '-f[Rebuild exclusions from scratch]' \
-  '-v[Print additional information]' \
-  '-h[Show help]' \
-  '1:command:(add show find check completions)'
-EOF
-    ;;
-  *)
-    printf 'Unsupported shell: %s\n' "$shell" >&2
-    exit 1
-    ;;
-  esac
-}
-
-check_status() {
-  mdutil -sv "$DIR"
-  if [ "$VERBOSE" = true ]; then
-    printf 'Current exclusions:\n'
-    get_exclusions
   fi
 }
 
@@ -112,21 +86,49 @@ add_missing() {
   printf '\n\xF0\x9F\x91\x80 Check and verify at System Settings > Siri & Spotlight > Spotlight Privacy\n'
 }
 
-usage() {
-  cat <<USAGE
-Usage: $(basename "$0") [options] [command]
-Commands:
-  add     Find development directories and add them to Spotlight exclusions (default)
-  show    Show current Spotlight exclusions
-  find    Print candidate development directories
-  check   Show Spotlight indexing status for the directory
-  completions [SHELL]  Generate shell completion script (bash or zsh)
-Options:
-  -d DIR, --dir DIR     Directory to search (default: current directory)
-  -f, --force           Rebuild exclusions from scratch
-  -v, --verbose         Print additional information
-  -h, --help            Show this help message
-USAGE
+check_status() {
+  mdutil -sv "$DIR"
+  if [ "$VERBOSE" = true ]; then
+    printf 'Current exclusions:\n'
+    get_exclusions
+  fi
+}
+
+generate_completions() {
+  shell="${1:-bash}"
+  case "$shell" in
+  bash)
+    cat <<'EOF_INNER'
+# bash completion for spotlighter
+_spotlighter() {
+  local cur cmds opts
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  cmds="add show find check completions"
+  opts="-d --dir -f --force -v --verbose -h --help"
+  COMPREPLY=( $(compgen -W "$cmds $opts" -- "$cur") )
+  return 0
+}
+complete -F _spotlighter spotlighter
+EOF_INNER
+    ;;
+  zsh)
+    cat <<'EOF_INNER'
+#compdef spotlighter
+
+_arguments \
+  '-d[Directory to search]:directory:_files -/' \
+  '-f[Rebuild exclusions from scratch]' \
+  '-v[Print additional information]' \
+  '-h[Show help]' \
+  '1:command:(add show find check completions)'
+EOF_INNER
+    ;;
+  *)
+    printf 'Unsupported shell: %s\n' "$shell" >&2
+    exit 1
+    ;;
+  esac
 }
 
 cmd="add"

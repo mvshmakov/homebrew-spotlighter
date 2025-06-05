@@ -1,9 +1,9 @@
 class Spotlighter < Formula
   desc "Manage Spotlight indexing exclusions"
   homepage "https://github.com/mvshmakov/spotlighter"
-  url "https://github.com/mvshmakov/spotlighter/archive/6b054c7a71f8b8ffa20997461bcdaeed4066895d.tar.gz"
+  url "https://github.com/mvshmakov/spotlighter/archive/527aae7823f8c208e0cab46284adfb8fb2fa019f.tar.gz"
   version "0.1.0"
-  sha256 "bc924b352e947ff892e933c9ae1312c927c8aab044c3ce50e69e249861230c3a"
+  sha256 "a8ab341eacd1c319906c0413ce7dc5ed8ebcafff651e150d7c94889eeb822904"
   head "https://github.com/mvshmakov/spotlighter.git"
   license "MIT"
 

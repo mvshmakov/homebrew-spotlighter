@@ -19,16 +19,16 @@ FORCE=false
 VERBOSE=false
 
 get_exclusions() {
-  sudo "$PLIST_BUDDY_BIN" -c 'Print :Exclusions' "$PLIST" \
-    | sed -e 1d -e '$d' -e 's/^[\t ]*//'
+  sudo "$PLIST_BUDDY_BIN" -c 'Print :Exclusions' "$PLIST" |
+    sed -e 1d -e '$d' -e 's/^[\t ]*//'
 }
 
 find_candidates() {
   if command -v rg >/dev/null 2>&1; then
-    rg --files "$DIR" 2>/dev/null \
-      | grep -E '/(node_modules|venv|\.venv|\.direnv)/' \
-      | sed -E 's#(.*/(node_modules|venv|\.venv|\.direnv)).*#\1#' \
-      | sort -u
+    rg --files "$DIR" 2>/dev/null |
+      grep -E '/(node_modules|venv|\.venv|\.direnv)/' |
+      sed -E 's#(.*/(node_modules|venv|\.venv|\.direnv)).*#\1#' |
+      sort -u
   else
     find "$DIR" \
       \( -type d -name node_modules -o -type d -name venv -o -type d -name .venv -o -type d -name .direnv \) -prune
@@ -38,8 +38,8 @@ find_candidates() {
 generate_completions() {
   shell="${1:-bash}"
   case "$shell" in
-    bash)
-      cat <<'EOF'
+  bash)
+    cat <<'EOF'
 # bash completion for spotlighter
 _spotlighter() {
   local cur cmds opts
@@ -52,9 +52,9 @@ _spotlighter() {
 }
 complete -F _spotlighter spotlighter
 EOF
-      ;;
-    zsh)
-      cat <<'EOF'
+    ;;
+  zsh)
+    cat <<'EOF'
 #compdef spotlighter
 
 _arguments \
@@ -64,11 +64,11 @@ _arguments \
   '-h[Show help]' \
   '1:command:(add show find check completions)'
 EOF
-      ;;
-    *)
-      printf 'Unsupported shell: %s\n' "$shell" >&2
-      exit 1
-      ;;
+    ;;
+  *)
+    printf 'Unsupported shell: %s\n' "$shell" >&2
+    exit 1
+    ;;
   esac
 }
 
@@ -133,56 +133,56 @@ cmd="add"
 comp_shell=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    add|show|find|check|completions)
-      cmd="$1"
+  add | show | find | check | completions)
+    cmd="$1"
+    shift
+    if [ "$cmd" = "completions" ] && [ $# -gt 0 ]; then
+      comp_shell="$1"
       shift
-      if [ "$cmd" = "completions" ] && [ $# -gt 0 ]; then
-        comp_shell="$1"
-        shift
-      fi
-      ;;
-    -d|--dir)
-      DIR="$2"
-      shift 2
-      ;;
-    -f|--force)
-      FORCE=true
-      shift
-      ;;
-    -v|--verbose)
-      VERBOSE=true
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      printf 'Unknown option: %s\n' "$1" >&2
-      usage >&2
-      exit 1
-      ;;
+    fi
+    ;;
+  -d | --dir)
+    DIR="$2"
+    shift 2
+    ;;
+  -f | --force)
+    FORCE=true
+    shift
+    ;;
+  -v | --verbose)
+    VERBOSE=true
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    printf 'Unknown option: %s\n' "$1" >&2
+    usage >&2
+    exit 1
+    ;;
   esac
 done
 
 case "$cmd" in
-  add)
-    add_missing
-    ;;
-  show)
-    get_exclusions
-    ;;
-  find)
-    find_candidates
-    ;;
-  check)
-    check_status
-    ;;
-  completions)
-    generate_completions "${comp_shell:-bash}"
-    ;;
-  *)
-    usage
-    exit 1
-    ;;
+add)
+  add_missing
+  ;;
+show)
+  get_exclusions
+  ;;
+find)
+  find_candidates
+  ;;
+check)
+  check_status
+  ;;
+completions)
+  generate_completions "${comp_shell:-bash}"
+  ;;
+*)
+  usage
+  exit 1
+  ;;
 esac

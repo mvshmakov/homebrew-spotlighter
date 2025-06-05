@@ -5,9 +5,10 @@ class Spotlighter < Formula
   version "0.1.0"
   sha256 :no_check
   head "https://github.com/mvshmakov/spotlighter.git"
+  license "MIT"
 
   def install
-    script = buildpath/spotlighter
+    script = buildpath/"spotlighter"
     bash_output = Utils.safe_popen_read(script, "completions", "bash")
     (buildpath/"spotlighter.bash").write bash_output
     zsh_output = Utils.safe_popen_read(script, "completions", "zsh")

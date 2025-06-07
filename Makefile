@@ -3,7 +3,7 @@ SHFMT_OPTS := -i 2 -d
 
 FILES := spotlighter
 
-.PHONY: lint format
+.PHONY: lint format check
 
 lint:
 	shfmt $(SHFMT_OPTS) $(FILES)
@@ -11,3 +11,6 @@ lint:
 
 format:
 	shfmt -w -i 2 $(FILES)
+
+check:
+	./scripts/verify_formula.sh

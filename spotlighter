@@ -43,15 +43,8 @@ get_exclusions() {
 }
 
 find_candidates() {
-  if command -v rg >/dev/null 2>&1; then
-    rg --files "$DIR" 2>/dev/null |
-      grep -E '/(node_modules|venv|\\.venv|\\.direnv)/' |
-      sed -E 's#(.*/(node_modules|venv|\\.venv|\\.direnv)).*#\1#' |
-      sort -u
-  else
-    find "$DIR" \
-      \( -type d -name node_modules -o -type d -name venv -o -type d -name .venv -o -type d -name .direnv \) -prune
-  fi
+  find "$DIR" \
+    \( -type d -name node_modules -o -type d -name venv -o -type d -name .venv -o -type d -name .direnv \) -print -prune 2>/dev/null | sort -u
 }
 
 add_missing() {

@@ -16,3 +16,5 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt
       - name: Run shfmt and ShellCheck
         run: make lint
+      - name: Verify formula
+        run: make check

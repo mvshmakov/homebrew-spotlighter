@@ -46,7 +46,7 @@ find_candidates() {
   if command -v rg >/dev/null 2>&1; then
     rg --files "$DIR" 2>/dev/null |
       grep -E '/(node_modules|venv|\\.venv|\\.direnv)/' |
-      sed -E 's#(.*/(node_modules|venv|\\.venv|\\.direnv)).*#\\1#' |
+      sed -E 's#(.*/(node_modules|venv|\\.venv|\\.direnv)).*#\1#' |
       sort -u
   else
     find "$DIR" \
@@ -101,11 +101,22 @@ generate_completions() {
     cat <<'EOF_INNER'
 # bash completion for spotlighter
 _spotlighter() {
-  local cur cmds opts
+  local cur prev cmds opts
   COMPREPLY=()
   cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
   cmds="add show find check completions"
   opts="-d --dir -f --force -v --verbose -h --help"
+  case "$prev" in
+    -d|--dir)
+      COMPREPLY=( $(compgen -d -- "$cur") )
+      return 0
+      ;;
+    completions)
+      COMPREPLY=( $(compgen -W "bash zsh" -- "$cur") )
+      return 0
+      ;;
+  esac
   COMPREPLY=( $(compgen -W "$cmds $opts" -- "$cur") )
   return 0
 }
@@ -116,12 +127,21 @@ EOF_INNER
     cat <<'EOF_INNER'
 #compdef spotlighter
 
-_arguments \
+_arguments -s \
+  '1:command:(add show find check completions)' \
   '-d[Directory to search]:directory:_files -/' \
   '-f[Rebuild exclusions from scratch]' \
   '-v[Print additional information]' \
   '-h[Show help]' \
-  '1:command:(add show find check completions)'
+  '::shell:->shell'
+
+case $state in
+  shell)
+    if [[ $words[2] == completions ]]; then
+      _values 'shell' bash zsh
+    fi
+    ;;
+esac
 EOF_INNER
     ;;
   *)
